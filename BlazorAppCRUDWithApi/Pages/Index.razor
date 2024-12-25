@@ -1,0 +1,46 @@
+﻿@page "/"
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<p>Welcome to your new app.</p>
+
+
+@if (posts == null)
+{
+    <button @onclick="LoadPostData">load post</button>
+}
+else
+{
+    <ul>
+        @foreach (var post in posts)
+        {
+            <li>
+                <h2>Title: @post.title</h2>
+                <p>Body: @post.body</p>
+            </li>
+        }
+    </ul>
+}
+<SurveyPrompt Title="This is my first blazor app"/>
+
+@code{
+    public List<Post>? posts;
+
+    public HttpClient httpClient = new HttpClient();
+
+    public async Task LoadPostData()
+    {
+        posts = await httpClient.GetFromJsonAsync<List<Post>>("https://jsonplaceholder.typicode.com/posts");
+    }
+
+    public class Post
+    {
+        public int userId { get; set; }
+        public int id { get; set; }
+        public string? title { get; set; }
+        public string? body { get; set; }
+    }
+    // https://jsonplaceholder.typicode.com/posts/1
+}

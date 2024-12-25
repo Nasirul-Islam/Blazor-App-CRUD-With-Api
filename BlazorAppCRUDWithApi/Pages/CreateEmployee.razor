@@ -1,0 +1,69 @@
+﻿@page "/createEmployee"
+@using System.Net.Http.Json
+@inject HttpClient httpClient
+
+<PageTitle>Create Employee</PageTitle>
+
+<h2>Create An Employee</h2>
+
+<EditForm Model="@postData" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label for="id">Post ID:</label>
+        <InputNumber id="id" @bind-Value="postData.Id" class="form-control" />
+    </div>
+
+    <div>
+        <label for="title">Title:</label>
+        <InputText id="title" @bind-Value="postData.Title" class="form-control" />
+    </div>
+
+    <div>
+        <label for="body">Body:</label>
+        <InputTextArea id="body" @bind-Value="postData.Body" class="form-control" />
+    </div>
+
+    <div>
+        <label for="userId">User ID:</label>
+        <InputNumber id="userId" @bind-Value="postData.UserId" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+@if (responseData != null)
+{
+    <div class="mt-3">
+        <h4>Response Data:</h4>
+        <p><strong>ID:</strong> @responseData.Id</p>
+        <p><strong>Title:</strong> @responseData.Title</p>
+        <p><strong>Body:</strong> @responseData.Body</p>
+        <p><strong>User ID:</strong> @responseData.UserId</p>
+    </div>
+}
+
+@code {
+
+    private PostRequest postData = new();
+    private PostResponse? responseData;
+
+    private async Task HandleSubmit()
+    {
+        responseData = await httpClient.PostAsJsonAsync("https://jsonplaceholder.typicode.com/posts", postData)
+            .Result.Content.ReadFromJsonAsync<PostResponse>();
+    }
+
+    public class PostRequest
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
+        public int UserId { get; set; }
+    }
+
+    public class PostResponse : PostRequest
+    {
+    }
+}
