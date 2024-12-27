@@ -1,9 +1,9 @@
-﻿@page "/employeeForm"
+﻿@page "/employeeForm/{empID:int}"
 @using BlazorAppCRUDWithApi.Data
 @inject NavigationManager Navigation
 @inject HttpClient httpClient
 
-@if (@Title!=null)
+@if (@empID == -1)
 {
     <h2>Create An Employee</h2>
 } else
@@ -143,40 +143,60 @@
 @code {
     private EmployeeInfo employeeInfo = new EmployeeInfo();
     private string? responseMessage;
+    // The empID parameter from the route
     [Parameter]
-    public string? Title { get; set; }
-    private async Task HandleValidSubmit()
+    public int empID { get; set; } = -1; 
+    //[Parameter]
+    //public string? Title { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        if(empID != -1)
+        {
+            await GetEmployeeData();
+        }
+    }
+    private async Task GetEmployeeData()
     {
         try
         {
+            // Fetch the employee data using the empID
+            var url = $"http://192.168.0.124:305/api/Employee/{empID}";
+            var response = await httpClient.GetFromJsonAsync<List<EmployeeInfo>>(url);
+            if (response != null && response.Any())
+            {
+                // Get the first employee from the array
+                employeeInfo = response.First(); 
+            }
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error fetching employee data: {ex.Message}");
+        }
+    }
+    private async Task HandleValidSubmit()
+    {
+        if (empID == -1)
+        {
+            await CreateEmployeeInfo();
+        }
+        else
+        {
+            await UpdateEmployeeInfo();
+        }
+    }
+    private async Task CreateEmployeeInfo()
+    {
+        try
+        {
+
             // Set the API endpoint
             string apiUrl = "http://192.168.0.124:305/api/employee";
 
             // Send a POST request with the employeeInfo model serialized as JSON
             HttpResponseMessage response = await httpClient.PostAsJsonAsync(apiUrl, employeeInfo);
-
+            
             // Check if the response is successful
-            if (response.IsSuccessStatusCode)
-            {
-                // Deserialize the response content to retrieve the message
-                var responseContent = await response.Content.ReadFromJsonAsync<ApiResponse>();
-                responseMessage = responseContent?.Message;
-
-                // Log the success message
-                Console.WriteLine(responseMessage);
-
-                // Clear the form fields
-                employeeInfo = new EmployeeInfo();
-
-                // navigate to another page
-                //Navigation.NavigateTo("/success");
-            }
-            else
-            {
-                // Log or handle API errors
-                Console.WriteLine($"Error: {response.StatusCode}, {await response.Content.ReadAsStringAsync()}");
-                Console.WriteLine(responseMessage);
-            }
+            await HandleResponse(response);
         }
         catch (Exception ex)
         {
@@ -184,6 +204,34 @@
             responseMessage = $"Exception: {ex.Message}";
             Console.WriteLine(responseMessage);
         }
+    }
+    private async Task UpdateEmployeeInfo()
+    {
+        var url = $"http://192.168.0.124:305/api/Employee/{empID}";
+        var response = await httpClient.PutAsJsonAsync(url, employeeInfo);
+        await HandleResponse(response);
+    }
+    private async Task HandleResponse(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            // Deserialize the response content to retrieve the message
+            var responseContent = await response.Content.ReadFromJsonAsync<ApiResponse>();
+            responseMessage = responseContent?.Message;
+
+            // Clear the form fields
+            employeeInfo = new EmployeeInfo();
+
+            // Navigate back after saving
+            Navigation.NavigateTo("/employeeList");
+        }
+        else
+        {
+            // Log or handle API errors
+            Console.WriteLine($"Error: {response.StatusCode}, {await response.Content.ReadAsStringAsync()}");
+            Console.WriteLine(responseMessage);
+        }
+        
     }
     private class ApiResponse
     {

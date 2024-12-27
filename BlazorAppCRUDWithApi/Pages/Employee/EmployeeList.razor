@@ -3,6 +3,8 @@
 @using BlazorAppCRUDWithApi
 @using BlazorAppCRUDWithApi.Data
 @inject HttpClient httpClient
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
 
 <PageTitle>Employee List</PageTitle>
 
@@ -41,8 +43,8 @@ else
                         <td>@employee.JobTitle</td>
                         <td>@employee.Salary?.ToString("C")</td>
                         <td>
-                            <button class="btn btn-primary btn-sm me-1" @onclick="() => EditEmployee(employee.EmpID)">Edit</button>
-                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteEmployee(employee.EmpID)">Delete</button>
+                            <button class="btn btn-primary btn-sm me-1 my-1" @onclick="() => EditEmployee(employee.EmpID)">Edit</button>
+                            <button class="btn btn-danger btn-sm my-1" @onclick="() => DeleteEmployee(employee.EmpID)">Delete</button>
                         </td>
                     </tr>
                 }
@@ -60,7 +62,8 @@ else
     {
         try
         {
-            employees = await httpClient.GetFromJsonAsync<List<EmployeeInfo>>("http://192.168.0.124:305/api/Employee");
+            var url = "http://192.168.0.124:305/api/Employee";
+            employees = await httpClient.GetFromJsonAsync<List<EmployeeInfo>>(url);
         }
         catch (Exception ex)
         {
@@ -70,34 +73,57 @@ else
 
     private void EditEmployee(int empID)
     {
+        var employee = employees?.Where(e => e.EmpID == empID).ToList();
         // Navigate to an Edit page or open a modal
+        if (employee != null)
+        {
+            //editEmployee = employee;
+            //Navigation.NavigateTo($"/employeeForm");
+            Navigation.NavigateTo($"/employeeForm/{empID}");
+        }
         Console.WriteLine($"Editing Employee ID: {empID}");
     }
 
     private async Task DeleteEmployee(int empID)
     {
-        bool confirm = true;
-        //await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this employee?");
+        bool confirm = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { "Are you sure you want to delete this employee?" });
+
         if (confirm)
         {
             try
             {
-                var response = await httpClient.DeleteAsync($"http://192.168.0.124:305/api/Employee/{empID}");
+                var url = $"http://192.168.0.124:305/api/Employee/{empID}";
+                var response = await httpClient.DeleteAsync(url);
                 if (response.IsSuccessStatusCode)
                 {
-                    employees = employees?.Where(e => e.EmpID != empID).ToList();
-                    Console.WriteLine($"Deleted Employee ID: {empID}");
+                    // Assuming the response body contains the message
+                    var result = await response.Content.ReadFromJsonAsync<ApiResponse>();
+                    if (result != null)
+                    {
+                        // Show success message in an alert
+                        await JSRuntime.InvokeVoidAsync("alert", result.Message);
+
+                        // Update the list of employees after successful deletion
+                        employees = employees?.Where(e => e.EmpID != empID).ToList();
+                    }
                 }
                 else
                 {
-                    Console.WriteLine($"Failed to delete Employee ID: {empID}");
+                    // If the deletion fails, show an error message in an alert
+                    await JSRuntime.InvokeVoidAsync("alert", "Failed to delete employee.");
                 }
             }
             catch (Exception ex)
             {
+                await JSRuntime.InvokeVoidAsync("alert", $"Error deleting employee: {ex.Message}");
                 Console.WriteLine($"Error deleting employee: {ex.Message}");
             }
         }
     }
+    public class ApiResponse
+    {
+        public string? Message { get; set; }
+    }
+
 }
 
