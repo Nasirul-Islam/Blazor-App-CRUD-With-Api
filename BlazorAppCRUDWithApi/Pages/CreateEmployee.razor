@@ -1,12 +1,19 @@
 ﻿@page "/createEmployee"
 @using System.Net.Http.Json
+@using BlazorAppCRUDWithApi.Pages.Employee
 @inject HttpClient httpClient
 
 <PageTitle>Create Employee</PageTitle>
 
-<h2>Create An Employee</h2>
 
-<EditForm Model="@postData" OnValidSubmit="HandleSubmit">
+
+<EmployeeForm Title="Create" />
+
+
+
+
+@* 
+    <EditForm Model="@postData" OnValidSubmit="HandleSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -32,7 +39,6 @@
 
     <button type="submit" class="btn btn-primary">Submit</button>
 </EditForm>
-
 @if (responseData != null)
 {
     <div class="mt-3">
@@ -43,27 +49,27 @@
         <p><strong>User ID:</strong> @responseData.UserId</p>
     </div>
 }
-
+*@
 @code {
 
-    private PostRequest postData = new();
-    private PostResponse? responseData;
+    // private PostRequest postData = new();
+    // private PostResponse? responseData;
 
-    private async Task HandleSubmit()
-    {
-        responseData = await httpClient.PostAsJsonAsync("https://jsonplaceholder.typicode.com/posts", postData)
-            .Result.Content.ReadFromJsonAsync<PostResponse>();
-    }
+    // private async Task HandleSubmit()
+    // {
+    //     responseData = await httpClient.PostAsJsonAsync("https://jsonplaceholder.typicode.com/posts", postData)
+    //         .Result.Content.ReadFromJsonAsync<PostResponse>();
+    // }
 
-    public class PostRequest
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Body { get; set; } = string.Empty;
-        public int UserId { get; set; }
-    }
+    // public class PostRequest
+    // {
+    //     public int Id { get; set; }
+    //     public string Title { get; set; } = string.Empty;
+    //     public string Body { get; set; } = string.Empty;
+    //     public int UserId { get; set; }
+    // }
 
-    public class PostResponse : PostRequest
-    {
-    }
+    // public class PostResponse : PostRequest
+    // {
+    // }
 }

@@ -1,0 +1,103 @@
+﻿@page "/employeeList"
+@using System.Net.Http.Json
+@using BlazorAppCRUDWithApi
+@using BlazorAppCRUDWithApi.Data
+@inject HttpClient httpClient
+
+<PageTitle>Employee List</PageTitle>
+
+<h2>Employee List</h2>
+
+
+@if (employees == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Department</th>
+                    <th>Job Title</th>
+                    <th>Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var employee in employees)
+                {
+                    <tr>
+                        <td>@employee.EmpID</td>
+                        <td>@employee.FirstName @employee.LastName</td>
+                        <td>@employee.Email</td>
+                        <td>@employee.PhoneNumber</td>
+                        <td>@employee.Department</td>
+                        <td>@employee.JobTitle</td>
+                        <td>@employee.Salary?.ToString("C")</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm me-1" @onclick="() => EditEmployee(employee.EmpID)">Edit</button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteEmployee(employee.EmpID)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+
+
+@code {
+    private List<EmployeeInfo>? employees;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            employees = await httpClient.GetFromJsonAsync<List<EmployeeInfo>>("http://192.168.0.124:305/api/Employee");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching employee data: {ex.Message}");
+        }
+    }
+
+    private void EditEmployee(int empID)
+    {
+        // Navigate to an Edit page or open a modal
+        Console.WriteLine($"Editing Employee ID: {empID}");
+    }
+
+    private async Task DeleteEmployee(int empID)
+    {
+        bool confirm = true;
+        //await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this employee?");
+        if (confirm)
+        {
+            try
+            {
+                var response = await httpClient.DeleteAsync($"http://192.168.0.124:305/api/Employee/{empID}");
+                if (response.IsSuccessStatusCode)
+                {
+                    employees = employees?.Where(e => e.EmpID != empID).ToList();
+                    Console.WriteLine($"Deleted Employee ID: {empID}");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to delete Employee ID: {empID}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting employee: {ex.Message}");
+            }
+        }
+    }
+}
+
