@@ -43,6 +43,7 @@ else
                         <td>@employee.JobTitle</td>
                         <td>@employee.Salary?.ToString("C")</td>
                         <td>
+                            <button class="btn btn-primary btn-sm me-1 my-1" @onclick="() => ViewEmployee(employee.EmpID)">View</button>
                             <button class="btn btn-primary btn-sm me-1 my-1" @onclick="() => EditEmployee(employee.EmpID)">Edit</button>
                             <button class="btn btn-danger btn-sm my-1" @onclick="() => DeleteEmployee(employee.EmpID)">Delete</button>
                         </td>
@@ -62,13 +63,25 @@ else
     {
         try
         {
-            var url = "http://192.168.0.124:305/api/Employee";
+            // var url = "http://192.168.0.124:305/api/Employee";
+            var url = $"http://192.168.0.222:401/api/Employee";
             employees = await httpClient.GetFromJsonAsync<List<EmployeeInfo>>(url);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching employee data: {ex.Message}");
         }
+    }
+
+    private void ViewEmployee(int empID)
+    {
+        var employee = employees?.Where(e => e.EmpID == empID).ToList();
+        // Navigate to an Edit page or open a modal
+        if (employee != null)
+        {
+            Navigation.NavigateTo($"/employeeView/{empID}");
+        }
+        Console.WriteLine($"Viewing Employee ID: {empID}");
     }
 
     private void EditEmployee(int empID)
@@ -92,7 +105,8 @@ else
         {
             try
             {
-                var url = $"http://192.168.0.124:305/api/Employee/{empID}";
+                // var url = $"http://192.168.0.124:305/api/Employee/{empID}";
+                var url = $"http://192.168.0.222:401/api/Employee/{empID}";
                 var response = await httpClient.DeleteAsync(url);
                 if (response.IsSuccessStatusCode)
                 {

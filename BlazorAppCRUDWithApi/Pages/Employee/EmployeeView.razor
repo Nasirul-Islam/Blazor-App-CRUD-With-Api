@@ -1,0 +1,133 @@
+﻿@page "/employeeView/{empID:int}"
+@using BlazorAppCRUDWithApi.Data
+@inject NavigationManager Navigation
+@inject HttpClient httpClient
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Employee View</PageTitle>
+
+
+<h3 class="text-center mt-3">Employee Details</h3>
+
+@if (employeeInfo != null)
+{
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        Personal Information
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Employee ID:</strong> @employeeInfo.EmpID</p>
+                        <p><strong>Name:</strong> @employeeInfo.FirstName @employeeInfo.LastName</p>
+                        <p><strong>Email:</strong> @employeeInfo.Email</p>
+                        <p><strong>Phone:</strong> @employeeInfo.PhoneNumber</p>
+                        <p><strong>Date of Birth:</strong> @employeeInfo.DateOfBirth?.ToString("yyyy-MM-dd")</p>
+                        <p><strong>Address:</strong> @employeeInfo.Address</p>
+                        <p><strong>City:</strong> @employeeInfo.City</p>
+                        <p><strong>State:</strong> @employeeInfo.State</p>
+                        <p><strong>Postal Code:</strong> @employeeInfo.PostalCode</p>
+                        <p><strong>Country:</strong> @employeeInfo.Country</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        Job Information
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Hire Date:</strong> @employeeInfo.HireDate.ToString("yyyy-MM-dd")</p>
+                        <p><strong>Job Title:</strong> @employeeInfo.JobTitle</p>
+                        <p><strong>Department:</strong> @employeeInfo.Department</p>
+                        <p><strong>Salary:</strong> @employeeInfo.Salary?.ToString("C")</p>
+                        <p><strong>Active Status:</strong> @(employeeInfo.IsActive ? "Active" : "Inactive")</p>
+                        <p><strong>Created Date:</strong> @employeeInfo.CreatedDate.ToString("yyyy-MM-dd HH:mm")</p>
+                        <p><strong>Updated Date:</strong> @employeeInfo.UpdatedDate.ToString("yyyy-MM-dd HH:mm")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-4 text-center">
+            @code {
+            private string employeeListRoute = "/employeeList";
+            }
+        <button class="btn btn-secondary" @onclick="() => Navigation.NavigateTo(employeeListRoute)">Back</button>
+        <button class="btn btn-primary" @onclick="PrintEmployeeReport">Report</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center mt-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Loading employee details...</p>
+    </div>
+}
+
+
+
+@code {
+    private EmployeeInfo employeeInfo = new EmployeeInfo();
+    private string? responseMessage;
+    // The empID parameter from the route
+    [Parameter]
+    public int empID { get; set; } = -1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (empID != -1)
+        {
+            await GetEmployeeData();
+        }
+    }
+    private async Task GetEmployeeData()
+    {
+        try
+        {
+            // Fetch the employee data using the empID
+            var url = $"http://192.168.0.222:401/api/Employee/{empID}";
+            //var url = $"http://192.168.0.124:305/api/Employee/{empID}";
+            var response = await httpClient.GetFromJsonAsync<List<EmployeeInfo>>(url);
+            if (response != null && response.Any())
+            {
+                // Get the first employee from the array
+                employeeInfo = response.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching employee data: {ex.Message}");
+        }
+    }
+    // generate employee report 
+    private async Task PrintEmployeeReport()
+    {
+        var employeeData = new
+        {
+            employeeInfo.EmpID,
+            employeeInfo.FirstName,
+            employeeInfo.LastName,
+            employeeInfo.Email,
+            employeeInfo.PhoneNumber,
+            DateOfBirth = employeeInfo.DateOfBirth?.ToString("yyyy-MM-dd"),
+            employeeInfo.HireDate,
+            employeeInfo.JobTitle,
+            employeeInfo.Department,
+            Salary = employeeInfo.Salary?.ToString("C"),
+            employeeInfo.Address,
+            employeeInfo.City,
+            employeeInfo.State,
+            employeeInfo.PostalCode,
+            employeeInfo.Country,
+            IsActive = employeeInfo.IsActive ? "Active" : "Inactive",
+            CreatedDate = employeeInfo.CreatedDate.ToString("yyyy-MM-dd HH:mm"),
+            UpdatedDate = employeeInfo.UpdatedDate.ToString("yyyy-MM-dd HH:mm"),
+        };
+
+        await JSRuntime.InvokeVoidAsync("generateEmployeePDF", employeeData);
+    }
+}
