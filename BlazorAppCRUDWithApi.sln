@@ -5,7 +5,7 @@ VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAppCRUDWithApi", "BlazorAppCRUDWithApi\BlazorAppCRUDWithApi.csproj", "{48F0905E-9695-4312-9DBE-D021C9F23D68}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorReport", "BlazorReport\BlazorReport.csproj", "{BCC7E7AF-7F97-4098-BAFA-8A7675B2BB28}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorReport", "BlazorReport\BlazorReport.csproj", "{BCC7E7AF-7F97-4098-BAFA-8A7675B2BB28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
